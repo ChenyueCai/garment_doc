@@ -47,7 +47,7 @@
         
         
     <div id="doc" class="markdown-body container-fluid comment-enabled" data-hard-breaks="true" style="position: relative;"><h1 id="Project-2-Mesh-Edit"><a class="anchor hidden-xs" href="#Project-2-Mesh-Edit" title="Project-2-Mesh-Edit"><span class="octicon octicon-link"></span></a>Garment Transfer Project</h1><h4 id="Chenyue-Cai"><a class="anchor hidden-xs" href="#Chenyue-Cai" title="Chenyue-Cai"><span class="octicon octicon-link"></span></a>Chenyue Cai</h4><h2 id="Part-11-Bezier-curve-1d"><a class="anchor hidden-xs" href="#Part-11-Bezier-curve-1d" title="Part-11-Bezier-curve-1d"><span class="octicon octicon-link"></span></a>Part 1: Background & Problem Statement </h2>
-    <p>Cloth simulation has been widely researched in the past few decades. Fitting a garment to a virtual human body is of great importanace to high quality computer generated movies and video games. Yet, fitting a garment on human body is labor intensive. Most current pipelines would require extensive professional user input. Professional 3D artists will have to model the garment according to the specific body shape in 3D softwares. There are also methods that export 2D garment patterns, map it to human model and finally use physical simuation to get deformed 3D meshes. All of these methods require the artists to rescale the garment assets when applying it to a new body. Thus the garment reuse is very limited. There are recent methods that uses skeleton driven models to warp each part of the garment to fit the body. Yet is requires detailed skeleton and deformation mask as input. Here, we propose an elegant, robust and fast method for garment fitting to any body types only using the garment mesh and body mesh. </p>
+    <p>Cloth simulation has been widely researched in the past few decades. Fitting a garment to a virtual human body is of great importance to high-quality computer-generated movies and video games. Yet, fitting a garment on the human body is labor-intensive. Most current pipelines would require extensive professional user input. Professional 3D artists will have to model the garment according to the specific body shape in 3D software. Some methods export 2D garment patterns, map them to human models, and finally use physical simulation to get deformed 3D meshes. All of these methods require the artists to rescale the garment assets when applying them to a new body. Thus the garment reuse is very limited. There are recent methods that use skeleton-driven models to warp each part of the garment to fit the body. Yet it requires a detailed skeleton and deformation mask as input. Here, we propose an elegant, robust, and fast method for garment fitting to any body type only using the garment mesh and body mesh. </p>
     <p>Problem statement: Given generic body shape mesh $\mathcal{B}$, target body mesh $\mathcal{T}$ and garment fitted to the generic body $\mathcal{G}$, find the mesh that is fitted to the target body mesh. The generic body and the target body mesh share the same number of vertices, faces and their order. </p>
 
     <table></table>
@@ -60,9 +60,9 @@
 
 <h2 id="Part-21-Area-weighted-vn"><a class="anchor hidden-xs" href="#Part-21-Area-weighted-vn" title="Part-21-Area-weighted-vn"><span class="octicon octicon-link"></span></a>Part 2.1: Initial Warp</h2><p> </p>
 
-<p>We first get the offsets value between every vertice between the target body and the original body. Then, we bind each vertice on the garment mesh to its N neighborest neighbors on the generic body mesh. We use the offset values corresponding to these N neighbors to calculate an offset value to add to the original garment vertice. We weight each offsets so that the nearest neighbor's offset has the largest weight. We find that a good initial warp is very important. We have also tried projecting garment vertices onto the body and get the initial warp by adding displacement vectors to the projected points. Yet, this method is not as robust as the spatial ANN method since a vertice in an ambiguous area(e.g. near the armpit) could be mis-projected to the wrong face. </p>
+<p>We first get the offsets value between every vertice between the target body and the original body. Then, we bind each vertice on the garment mesh to its N nearest neighbors on the generic body mesh. We use the offset values corresponding to these N neighbors to calculate an offset value to add to the original garment vertice. We weigh each offset so that the nearest neighbor's offset has the largest weight. We find that a good initial warp is very important. We have also tried projecting garment vertices onto the body and getting the initial warp by adding displacement vectors to the projected points. Yet, this method is not as robust as the spatial ANN method since a vertice in an ambiguous area(e.g. near the armpit) could be mis-projected to the wrong face. </p>
 
-<p>Here we compare two different initial warping method. The left is using the projection method, the right is using the spatial ANN method.</p>
+<p>Here we compare two different initial warping methods. The left is using the projection method, the right is using the spatial ANN method.</p>
 <table>
 <thead>
 	<tr><img src="./asset/bad_initial_warp.png" height= 450px></tr>
@@ -112,7 +112,7 @@ $$ \min{ \Sigma_{v} \lVert W_vE_v \rVert ^2 + \Sigma_{v}m_v \lVert x_v - z_v \rV
 </thead>
 </table>
 <h2 id="Part-23-Edge-Split"><a class="anchor hidden-xs" href="#Part-23-Edge-Split" title="Part-23-Edge-Split"><span class="octicon octicon-link"></span></a> Part 3: Results and Analysis</h2>
-<p>Here are the results for using our algorithm. We have tried the garment on 8 male body types and 8 female body types ranging from very skinny to very fatty. We have used over 60 different type of garments, both double-layered and single-layered. Here I am showing only a selection of the garment. For each row, the leftmost is the original generic body with garment, the middle is the initial warp and the rightmost is the final result</p><p></p>
+<p>Here are the results for using our algorithm. We have tried the garment on 8 male body types and 8 female body types ranging from very skinny to very fatty. We have used over 60 different types of garments, both double-layered and single-layered. Here I am showing only a selection of the garment. For each row, the leftmost is the original generic body with a garment, the middle is the initial warp, and the rightmost is the final result.</p><p></p>
 
 <table>
 <thead>
@@ -128,7 +128,7 @@ $$ \min{ \Sigma_{v} \lVert W_vE_v \rVert ^2 + \Sigma_{v}m_v \lVert x_v - z_v \rV
 	<img src="./asset/Style06_Clothes_Reduced_Upper2_Thin_f_30result.png">
 </tr>
 </tbody>
-<p>The mesh are smoother and resembe the original garment much better especially near and folds and boundry. The mesh also preserves details like pendant, buttons. Here are more results for style 04 on all sorts of body.</p>
+<p>The meshes are smoother and resemble the original garment much better especially near and folds and boundry. The meshes also preserve details like pendant, buttons. Here are more results for style 04 on all sorts of body.</p>
 <table>
 <thead>
 <tr>
