@@ -19,7 +19,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="mobile-web-app-capable" content="yes">
     <title>
-        Project 2: Mesh Edit 
+        Project Garment Transfer 
     </title>
     <link rel="icon" type="image/png" href="https://hackmd.io/favicon.png">
     <link rel="apple-touch-icon" href="https://hackmd.io/apple-touch-icon.png">
@@ -46,13 +46,37 @@
     
         
         
-    <div id="doc" class="markdown-body container-fluid comment-enabled" data-hard-breaks="true" style="position: relative;"><h1 id="Project-2-Mesh-Edit"><a class="anchor hidden-xs" href="#Project-2-Mesh-Edit" title="Project-2-Mesh-Edit"><span class="octicon octicon-link"></span></a>Garment Transfer Project</h1><h4 id="Chenyue-Cai"><a class="anchor hidden-xs" href="#Chenyue-Cai" title="Chenyue-Cai"><span class="octicon octicon-link"></span></a>Chenyue Cai</h4><h2 id="Part-11-Bezier-curve-1d"><a class="anchor hidden-xs" href="#Part-11-Bezier-curve-1d" title="Part-11-Bezier-curve-1d"><span class="octicon octicon-link"></span></a>Part 1: Initial Warp </h2>
+    <div id="doc" class="markdown-body container-fluid comment-enabled" data-hard-breaks="true" style="position: relative;"><h1 id="Project-2-Mesh-Edit"><a class="anchor hidden-xs" href="#Project-2-Mesh-Edit" title="Project-2-Mesh-Edit"><span class="octicon octicon-link"></span></a>Garment Transfer Project</h1><h4 id="Chenyue-Cai"><a class="anchor hidden-xs" href="#Chenyue-Cai" title="Chenyue-Cai"><span class="octicon octicon-link"></span></a>Chenyue Cai</h4><h2 id="Part-11-Bezier-curve-1d"><a class="anchor hidden-xs" href="#Part-11-Bezier-curve-1d" title="Part-11-Bezier-curve-1d"><span class="octicon octicon-link"></span></a>Part 1: Background & Problem Statement </h2>
+    <p>Cloth simulation has been widely researched in the past few decades. Fitting a garment to a virtual human body is of great importanace to high quality computer generated movies and video games. Yet, fitting a garment on human body is labor intensive. Most current pipelines would require extensive professional user input. Professional 3D artists will have to model the garment according to the specific body shape in 3D softwares. There are also methods that export 2D garment patterns, map it to human model and finally use physical simuation to get deformed 3D meshes. All of these methods require the artists to rescale the garment assets when applying it to a new body. Thus the garment reuse is very limited. There are recent methods that uses skeleton driven models to warp each part of the garment to fit the body. Yet is requires detailed skeleton and deformation mask as input. Here, we propose an elegant, robust and fast method for garment fitting to any body types only using the garment mesh and body mesh. </p>
+    <p>Problem statement: Given generic body shape mesh $\mathcal{B}$, target body mesh $\mathcal{T}$ and garment fitted to the generic body $\mathcal{G}$, find the mesh that is fitted to the target body mesh. The generic body and the target body mesh share the same number of vertices, faces and their order. </p>
 
     <table></table>
 
 
-<h2 id="Part-12-Bezier-surface”"><a class="anchor hidden-xs" href="#Part-12-Bezier-surface”" title="Part-12-Bezier-surface”"><span class="octicon octicon-link"></span></a>Part 2: Energy Optimization </h2>
-<h3 id="Part2.1”">Theorical Derivation</h3>
+<h2 id="Part-12-Bezier-surface”"><a class="anchor hidden-xs" href="#Part-12-Bezier-surface”" title="Part-12-Bezier-surface”"><span class="octicon octicon-link"></span></a>Part 2: Methods </h2>
+
+<p>Our method has two main step: first get a coarse initial warp of the garment mesh according to the new garment, second do iterative improvements so that the initial warp could approach the original local topology while keeping the tightness of the garment.</p>
+
+
+<h2 id="Part-21-Area-weighted-vn"><a class="anchor hidden-xs" href="#Part-21-Area-weighted-vn" title="Part-21-Area-weighted-vn"><span class="octicon octicon-link"></span></a>Part 2.1: Initial Warp</h2><p> </p>
+
+<p>We first get the offsets value between every vertice between the target body and the original body. Then, we bind each vertice on the garment mesh to its N neighborest neighbors on the generic body mesh. We use the offset values corresponding to these N neighbors to calculate an offset value to add to the original garment vertice. We weight each offsets so that the nearest neighbor's offset has the largest weight. We find that a good initial warp is very important. We have also tried projecting garment vertices onto the body and get the initial warp by adding displacement vectors to the projected points. Yet, this method is not as robust as the spatial ANN method since a vertice in an ambiguous area(e.g. near the armpit) could be mis-projected to the wrong face. </p>
+
+<p>Here we compare two different initial warping method. The left is using the projection method, the right is using the spatial ANN method.</p>
+<table>
+<thead>
+	<tr><img src="./asset/bad_initial_warp.png" height= 450px></tr>
+	<tr></tr>
+	<tr><img src="./asset/nice_initial_warp.png" height= 450px></tr>
+	
+</thead>
+<tbody>
+
+
+</tbody>
+</table>
+
+<h2 id="Part-22-Edge-Flip"><a class="anchor hidden-xs" href="#Part-22-Edge-Flip" title="Part-22-Edge-Flip"><span class="octicon octicon-link"></span></a>Part 2.2: Energy Optimization</h2><p>
 
 <p>After inital warping, we now have a new garment transfered to the new body $\mathcal{T}$. The new garment is not well fitted to the body and the mesh topology is not optimized. We now use iterative steps to fix the issue. First, we would like to restore the mesh layout in the original garment $\mathcal{G}$. In addition, we don't want the points to drift too far away from the new garment vertices we just computed in inital warping. Thus we have two terms in the objective function.
 $$ \min{ \Sigma_{v} \lVert W_vE_v \rVert ^2 + \Sigma_{v}m_v \lVert x_v - z_v \rVert ^2}$$ </p>
@@ -61,65 +85,119 @@ $$ \min{ \Sigma_{v} \lVert W_vE_v \rVert ^2 + \Sigma_{v}m_v \lVert x_v - z_v \rV
         $E_v$ is a local coordinate system, whose entries are all the edges from a single garment vertice $x_v - x_i$ where $x_i$ is a neighbor of $x_v$. This term contains the variable of $x_v$ as well as variable $x_z$.
     </li>
     <li>
-        $W_v$ is precomputed based on $\bar{E_v}$ of the original garment. It has shape $(k-3) * k$ where $k$ is the number of neighbors the vertex has. Thus it contains no variable. Its columns are the right singular vectors of $\bar{E_v}$ except the first three. By Fundamental Theorem of Linear Algebra, these columns span the null space of $\bar{E_v}$. Thus any affine transformation of  $\bar{E_v}$ makes $\lVert E_vW_v \rVert ^2$ zero. The is ideal because we want to choose the new $x_v$ such that it could restore the local mesh layout. This idea is included in <a href ="https://graphics.pixar.com/library/WrapperSIGGRAPH2019/paper.pdf">this Mesh Wrap Paper</a> and <a href ="http://maxbudninskiy.com/pubs/BLTD17.pdf">this Spectral Affine kernel Embedding Paper.</a>
+        $W_v$ is precomputed based on $\bar{E_v}$ of the original garment. It has shape $(k-3) * k$ where $k$ is the number of neighbors the vertex has. Thus it contains no variable. Its columns are the right singular vectors of $\bar{E_v}$ except the first three. By Fundamental Theorem of Linear Algebra, these columns span the null space of $\bar{E_v}$. Thus any affine transformation of  $\bar{E_v}$ makes $\lVert E_vW_v \rVert ^2$ zero. The is ideal because we want to choose the new $x_v$ such that it could restore the local mesh layout. This idea is included in  <a href ="http://maxbudninskiy.com/pubs/BLTD17.pdf">this Spectral Affine kernel Embedding Paper.</a>
     </li>
     <li>
         The second term consists of $m_v$ a tightness value and $z_v$ is the vertice location from the previous iteration. It regulates how much each vertice could change at each iteration.
     </li>
 </ol> </p>
+
 <h3 id="Part2.2”">Solving the Equation</h3>
 <p>Now We could derive a closed form solution for this optimization problem. The variable in the equation is $X_{n*3}$ ($n$ here means the number of all vertices in the garment). The variable in the equation is in the term $E_v$ and the second term. We will look into each of them one by one.</p> <p> For $\Sigma_{v} \lVert E_vW_v \rVert ^2 $ we could expand $E_{v:k*3}$ ($k$ means the number of neighbors a vertex has) into $E_{v: n*3}^\prime$ where the expanded matrix only have values at rows where the vertex has neighbors and the rest are zeros. Similarly, We expand $W_{v:(k-3)*k}$ into $W_{v[(k-3)*n]}^\prime$ where only columns whose position correspondences to the vertex's neighbor has value, the rests are zeros. The norm of the product of the expanded matrixs are the same as the original. Yet the good thing is we could represent $E_{v[n*3]}^\prime$ as $ M_{v[n*n]} * X_{[n*n]} $ in terms of $M_v X$ where $M_{v[n*n]}$ is a sparse matrix. Then we could derive the closed formed solution of the first part: 
     $$ \min {(M_vX)^T W_v^TW_vM_v} X  = {X^TM_v^TW_vW_vM_vX} $$ Let $ M_v^TW_vW_vM_v $ be $L_v$ thus the equation's derivative could be written as the following: $$2\sum_{v} L_vX = 0 $$ we could further simplify by writing $2\sum_{v} L_v$ as $L$. </p><p> the second term. The derivative could be easily written as the following equation: $$ 2Q X - 2QZ = 0 $$ where $Q$ is a diagonal matrix with m_v as each of its diagonal entries. Thus we formed a linear system for the objective quadratic function: $$ (L + Q)X = QZ $$</p>
 
+<p>The linear solver is most ideal in this case since it is fast to solve per iteration. One additional detail is that the solved results may have body cloth intersection. We pull the vertices inside the body out along with N of its neighbors to make sure all the faces do not intersect.</p>
+<p>Here we show gif of per iteration mesh change from some not so smooth initial warp to a smooth mesh.</p>
 
-
-
-
-
-
-<h2 id="Part-21-Area-weighted-vn"><a class="anchor hidden-xs" href="#Part-21-Area-weighted-vn" title="Part-21-Area-weighted-vn"><span class="octicon octicon-link"></span></a>Part 2.1: </h2><p> </p>
 <table>
 <thead>
-
-</thead>
-<tbody>
-
-
-</tbody>
-</table>
-
-<h2 id="Part-22-Edge-Flip"><a class="anchor hidden-xs" href="#Part-22-Edge-Flip" title="Part-22-Edge-Flip"><span class="octicon octicon-link"></span></a>Part 2.2:</h2><p><img src="./images/part21.jpeg" align="left" width="550px"/></p><p></p><table>
-<thead>
-
-</tbody>
-</table>
-
-<h2 id="Part-23-Edge-Split"><a class="anchor hidden-xs" href="#Part-23-Edge-Split" title="Part-23-Edge-Split"><span class="octicon octicon-link"></span></a></h2><p></p><p></p><table>
-<thead>
+<th> Shirt with fold on thin male body</th>
+<th> Shirt with fold on fat male body</th>
 <tr>
+	<img src= "./asset/shirt_m_50.gif" height = 450px>
+</tr>
+<tr>
+	<img src="./asset/shirt_m_120.gif" height = 450px>
 </tr>
 </thead>
-<tbody>
-<tr>
-
-</tr>
-</tbody>
 </table>
+<h2 id="Part-23-Edge-Split"><a class="anchor hidden-xs" href="#Part-23-Edge-Split" title="Part-23-Edge-Split"><span class="octicon octicon-link"></span></a> Part 3: Results and Analysis</h2>
+<p>Here are the results for using our algorithm. We have tried the garment on 8 male body types and 8 female body types ranging from very skinny to very fatty. We have used over 60 different type of garments, both double-layered and single-layered. Here I am showing only a selection of the garment. For each row, the leftmost is the original generic body with garment, the middle is the initial warp and the rightmost is the final result</p><p></p>
 
 <table>
 <thead>
 <tr>
-
+	<img src="./asset/Style04_Clothes_reduced_Upper2_Thin_f_70result.png">
 </tr>
 </thead>
 <tbody>
 <tr>
-
+	<img src="./asset/Style06_Clothes_Reduced_Upper2_Thin_f_30result.png">
+</tr>
+<tr>
+	<img src="./asset/Style06_Clothes_Reduced_Upper2_Thin_f_30result.png">
 </tr>
 </tbody>
+<p>The mesh are smoother and resembe the original garment much better especially near and folds and boundry. The mesh also preserves details like pendant, buttons. Here are more results for style 04 on all sorts of body.</p>
+<table>
+<thead>
+<tr>
+	<img src="./asset/Style04_Clothes_reduced_Upper1_Thick_m_45result.png">
+</tr>
+<tr>
+	<img src="./asset/Style04_Clothes_reduced_Upper1_Thick_m_50result.png">
+</tr>
+<tr>
+	<img src="./asset/Style04_Clothes_reduced_Upper1_Thick_m_60result.png">
+</tr>
+<tr>
+	<img src="./asset/Style04_Clothes_reduced_Upper1_Thick_m_100result.png">
+</tr>
+<tr>
+	<img src="./asset/Style04_Clothes_reduced_Upper1_Thick_m_120result.png">
+</tr>
+<tr>
+	<img src="./asset/Style04_Clothes_reduced_Upper1_Thick_f_30result.png">
+</tr>
+<tr>
+	<img src="./asset/Style04_Clothes_reduced_Upper1_Thick_f_40result.png">
+</tr>
+<tr>
+	<img src="./asset/Style04_Clothes_reduced_Upper1_Thick_f_50result.png">
+</tr>
+<tr>
+	<img src="./asset/Style04_Clothes_reduced_Upper1_Thick_f_60result.png">
+</tr>
+<tr>
+	<img src="./asset/Style04_Clothes_reduced_Upper1_Thick_f_90result.png">
+</tr>
+<tr>
+	<img src="./asset/Style04_Clothes_reduced_Upper1_Thick_f_110result.png">
+</tr>
+</tbody>
+</thead>
 </table>
 
-<h2 id="Part-23-Loop-Subdivision"><a class="anchor hidden-xs" href="#Part-23-Loop-Subdivision" title="Part-23-Loop-Subdivision"><span class="octicon octicon-link"></span></a>Part 2.4: </h2><p><img src="./images/part23.jpeg" align = left width=550></p><table></table><p><img src="./images/futurism.jpg" align = left width=400></p><p>...</p> <table></table>
+
+<p>As for performance, it takes ~0.1 sec per iteration to solve the linear equation for a mesh of 5000 vertices. A more detailed description is listed below. The computation bottleneck is on the energy optimization matrix prepartion part, which could be parallelized. (current implementing) This part only need to be computed once per vertice.  So far without parallelization, the time to prepare the matrix is as follow.</p>
+<table><thead><tbody>
+	<tr>
+		<td>Number of vertices</td>
+		<td>Linear solver time</td>
+		<td>Matrix Prep Time</td>
+	</tr>
+	<tr>
+		<td>4968 </td>
+		<td> 0.138717</td>
+		<td>9.593028</td>
+	</tr>
+	<tr>
+		<td>2751 </td>
+		<td> 0.123159</td>
+		<td>2.665833</td>
+	</tr>
+	<tr>
+		<td>34699 </td>
+		<td> 1.165917</td>
+		<td>634.704226</td>
+	</tr>
+	
+</tbody></thead></table>
+
+
+<h2 id="Part-23-Loop-Subdivision"><a class="anchor hidden-xs" href="#Part-23-Loop-Subdivision" title="Part-23-Loop-Subdivision"><span class="octicon octicon-link"></span></a>Part 4: Future Work </h2>
+
+<p>Given our algorithm, we could quickly fit garment to different body types while preserving realistic folds and local topology of the garment. One possible use of our work is the generation of realistic synthetic dataset of human with garment since current almost all 3D human mesh dataset contain naked human body. One line of future work could be to use these synthetically generated data to learn clothes deformation with learning methods.</p>
 
 </div>
     <div class="ui-toc dropup unselectable hidden-print" style="display:none;">
@@ -138,8 +216,8 @@ $$ \min{ \Sigma_{v} \lVert W_vE_v \rVert ^2 + \Sigma_{v}m_v \lVert x_v - z_v \rV
 <li><a href="#Part-12-Bezier-surface”" title="Part 2.1: Computing the “Mid-way Face”">Part 2</a></li>
 <li><a href="#Part-21-Area-weighted-vn" title="Part 2.2: The Morph Sequence">Part 2.1:</a></li>
 <li><a href="#Part-22-Edge-Flip" title="Part 3.1: The “Mean face” of a population">Part 2.2: </a></li>
-<li class=""><a href="#Part-23-Edge-Split" title="Part 3.2: caricatures: Extrapolating from the mean">Part 2.3:</a></li>
-<li><a href="#Part-23-Loop-Subdivision" title="Part 4: Bells and Whistles">Part 2.4: </a></li>
+<li class=""><a href="#Part-23-Edge-Split" title="Part 3.2: caricatures: Extrapolating from the mean">Part 3:</a></li>
+<li><a href="#Part-23-Loop-Subdivision" title="Part 4: Bells and Whistles">Part 4: </a></li>
 </ul>
 </li>
 </ul>
@@ -158,8 +236,8 @@ $$ \min{ \Sigma_{v} \lVert W_vE_v \rVert ^2 + \Sigma_{v}m_v \lVert x_v - z_v \rV
 <li><a href="#Part-12-Bezier-surface”" title="Part 2.1: Computing the “Mid-way Face”">Part 2</a></li>
 <li><a href="#Part-21-Area-weighted-vn" title="Part 2.2: The Morph Sequence">Part 2.1</a></li>
 <li><a href="#Part-22-Edge-Flip" title="Part 3.1: The “Mean face” of a population">Part 2.2</a></li>
-<li class=""><a href="#Part-23-Edge-Split" title="Part 3.2: caricatures: Extrapolating from the mean">Part 2.3</a></li>
-<li><a href="#Part-23-Loop-Subdivision" title="Part 4: Bells and Whistles">Part 2.4 </a></li>
+<li class=""><a href="#Part-23-Edge-Split" title="Part 3.2: caricatures: Extrapolating from the mean">Part 3</a></li>
+<li><a href="#Part-23-Loop-Subdivision" title="Part 4: Bells and Whistles">Part 4 </a></li>
 </ul>
 </li>
 </ul>
